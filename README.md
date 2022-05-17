@@ -12,4 +12,4 @@ If I ever decide to make cool graphics or maybe Supernova simulations, this woul
 
 Don't mind how the pyramid looks in the GIF. GIF doesn't allow all colors.
 
-![](images/spinning_pyramid.jpg)
+![](images/spinning_pyramid.gif)
