@@ -31,12 +31,6 @@ indices = [
     3, 0, 4, # Triangle 6
 ]
 
-
-
-
-
-
-
 vertex_shader = """
 #version 330 core
 
@@ -88,6 +82,87 @@ void main()
 }
 """
 
+def bind_vao_to_vbo(vbo, location_in_shader, elements_in_attribute, element_type, values_as_is_bool, stride, offset):
+    #
+    # location in shader - a number that represents the attribute that's listed ON the top of shader
+    # elements in attribute - how many elements are in the attribute
+    # element type - the type of each element
+    # values as-is bool - are the values as-is?
+    # stride - stride is the size of a single vertex!! So if you have 3 for position, 3 for color, and 2 for texture, the stride is 8
+    # offset - offset is the distance away from the zero element in the vertex/vertice array
+    #
+    # binds the vao to the vbo
+    glBindBuffer(GL_ARRAY_BUFFER, vbo)
+    # defines the attribute in the shader
+    glVertexAttribPointer(location_in_shader, elements_in_attribute, element_type, values_as_is_bool, stride, offset)
+    # enables the attribute in the shader
+    glEnableVertexAttribArray(location_in_shader)
+    # unbinds the vao from the vbo
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+def set_uniform_shader_variable(name, value):
+    global program
+    location = glGetUniformLocation(program, name)
+    if type(value) == glm.vec3:
+        glUniform3fv(location, 1, glm.value_ptr(value))
+    elif type(value) == glm.mat4:
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm.value_ptr(value))
+    else:
+        print("Unsupported type")
+
+# define variables for render function
+rotation = 0.0
+model_1 = 0.0
+model_2 = 1.0
+model_3 = 0.0
+
+def render():
+    model = glm.mat4(1.0);
+    view = glm.mat4(1.0);
+    proj = glm.mat4(1.0);
+    global rotation
+    rotation += 0.2
+    model = glm.rotate(model, glm.radians(rotation), glm.vec3(model_1, model_2, model_3))
+    view = glm.translate(view, glm.vec3(0.0, -0.5, -3.0))
+    proj = glm.perspective(glm.radians(45.0), width / height, 0.1, 100.0)
+    set_uniform_shader_variable("model", model)
+    set_uniform_shader_variable("view", view)
+    set_uniform_shader_variable("proj", proj)
+    # bind vao
+    glBindVertexArray(vao)
+    # start drawing
+    # glClearColor(0.5, 0.5, 0.5, 1.0)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    # glDrawArrays(GL_TRIANGLES, 0, len(vertices))
+    glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, c_void_p(0))
+    glutSwapBuffers()
+    # poll events
+    glutPostRedisplay()
+
+
+def key_pressed(*args):
+    global model_1
+    global model_2
+    global model_3
+    global rotation
+    amount = 0.01
+    if args[0] == b'q':
+        model_1 += amount
+    elif args[0] == b'a':
+        model_1 -= amount
+    elif args[0] == b'w':
+        model_2 += amount
+    elif args[0] == b's':
+        model_2 -= amount
+    elif args[0] == b'e':
+        model_3 += amount
+    elif args[0] == b'd':
+        model_3 -= amount
+    elif args[0] == b'r':
+        rotation += 4.0
+    elif args[0] == b'f':
+        rotation -= 4.0
+    print(args[0])
 
 # make context
 glutInit()
@@ -97,18 +172,17 @@ glutCreateWindow("Pyramid")
 # WITHOUT THIS YOU WILL HAVE TRANSPARENT COLORS & TRANSPARENT FACES OF THE SHAPE
 glEnable(GL_DEPTH_TEST);
 
-
 # compile shaders
 vertex_shader = compileShader(vertex_shader, GL_VERTEX_SHADER)
 fragment_shader = compileShader(fragment_shader, GL_FRAGMENT_SHADER)
 
-# create program
+# create program & link shaders
 program = glCreateProgram()
 glAttachShader(program, vertex_shader)
 glAttachShader(program, fragment_shader)
 glLinkProgram(program)
 
-# use program
+# use program that consists of shaders
 glUseProgram(program)
 
 # create a vertex array object (VAO)
@@ -130,120 +204,23 @@ glBufferData(
     GL_STATIC_DRAW # usage
 )
 
-
 # copy data to the GPU
-glBufferData(GL_ARRAY_BUFFER, len(vertices) * 5, (c_float * len(vertices))(*vertices), GL_STATIC_DRAW)
-
-# specify the format of the "position" attribute
-# glVertexAttribPointer(layout, numComponents, type, GL_FALSE, stride, offset);
-# VAO1.LinkAttrib(0, 3, GL_FLOAT, 8 * sizeof(float), (void *)0);
+glBufferData(GL_ARRAY_BUFFER, len(vertices) * sizeof(c_float), (c_float * len(vertices))(*vertices), GL_STATIC_DRAW)
 
 #bind vbo
 glBindBuffer(GL_ARRAY_BUFFER, vbo)
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(c_float) * 8, c_void_p(0))
-glEnableVertexAttribArray(0)
-glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-glBindBuffer(GL_ARRAY_BUFFER, vbo)
-glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(c_float) * 8, c_void_p(3 * sizeof(c_float)))
-glEnableVertexAttribArray(1)
-glBindBuffer(GL_ARRAY_BUFFER, 0)
+# define each attribute of each Vertex Array Object (VAO) & bind it to the Vertex Buffer Object (VBO)
+bind_vao_to_vbo(vbo, 0, 3, GL_FLOAT, GL_FALSE, sizeof(c_float) * 8, c_void_p(0))
+bind_vao_to_vbo(vbo, 1, 3, GL_FLOAT, GL_FALSE, sizeof(c_float) * 8, c_void_p(3 * sizeof(c_float)))
+bind_vao_to_vbo(vbo, 2, 2, GL_FLOAT, GL_FALSE, sizeof(c_float) * 8, c_void_p(6 * sizeof(c_float)))
 
-glBindBuffer(GL_ARRAY_BUFFER, vbo)
-glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(c_float) * 8, c_void_p(6 * sizeof(c_float)))
-glEnableVertexAttribArray(2)
-glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-#unbind VAO & EBO & VBO
+#unbind VAO & EBO (the VBO is already unbound)
 glBindVertexArray(0)
-glBindBuffer(GL_ARRAY_BUFFER, 0)
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-
-
-def set_uniform_shader_variable(name, value):
-    global program
-    location = glGetUniformLocation(program, name)
-    if type(value) == glm.vec3:
-        glUniform3fv(location, 1, glm.value_ptr(value))
-    elif type(value) == glm.mat4:
-        glUniformMatrix4fv(location, 1, GL_FALSE, glm.value_ptr(value))
-    else:
-        print("Unsupported type")
-
-# render function
-rotation = 0.0
-
-
-model_1 = 0.0
-model_2 = 1.0
-model_3 = 0.0
-
-def render():
-
-
-    model = glm.mat4(1.0);
-    view = glm.mat4(1.0);
-    proj = glm.mat4(1.0);
-
-    global rotation
-    rotation += 0.2
-
-    model = glm.rotate(model, glm.radians(rotation), glm.vec3(model_1, model_2, model_3))
-    view = glm.translate(view, glm.vec3(0.0, -0.5, -3.0))
-    proj = glm.perspective(glm.radians(45.0), width / height, 0.1, 100.0)
-
-    set_uniform_shader_variable("model", model)
-    set_uniform_shader_variable("view", view)
-    set_uniform_shader_variable("proj", proj)
-
-    # bind vao
-    glBindVertexArray(vao)
-
-    # start drawing
-    # glClearColor(0.5, 0.5, 0.5, 1.0)
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    # glDrawArrays(GL_TRIANGLES, 0, len(vertices))
-    glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, c_void_p(0))
-    glutSwapBuffers()
-
-    # poll events
-    glutPostRedisplay()
-
-
-def key_pressed(*args):
-    global model_1
-    global model_2
-    global model_3
-    global rotation
-
-    amount = 0.01
-
-    if args[0] == b'q':
-        model_1 += amount
-    elif args[0] == b'a':
-        model_1 -= amount
-    elif args[0] == b'w':
-        model_2 += amount
-    elif args[0] == b's':
-        model_2 -= amount
-    elif args[0] == b'e':
-        model_3 += amount
-    elif args[0] == b'd':
-        model_3 -= amount
-    elif args[0] == b'r':
-        rotation += 4.0
-    elif args[0] == b'f':
-        rotation -= 4.0
-   
-    print(args[0])
-        
-
-
-    
-# render every millisecond
+# define callbacks
 glutDisplayFunc(render)
-# register callback functions
 glutKeyboardFunc(key_pressed)
 glutMainLoop()
 
