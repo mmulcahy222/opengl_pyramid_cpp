@@ -4,7 +4,7 @@ In my free time I wanted to improve my coding skills by making some graphics in 
 
 I originally started in the apex mother language of C++ and all I could have done was a spinning color pyramid that has the colors of the Blocks in Mario Kart 64.
 
-I wanted to go above that and do more, but I noticed that I was just hitting massive roadblocks in C++ and I had limited time. 
+I wanted to go above that and do more, but I noticed that I was just hitting massive roadblocks in C++ and I had limited time.
 
 I had to bite the bullet & suck it up.
 
@@ -28,5 +28,12 @@ I REALLY WANT TO HAVE THIS do Physics and bounce off each other, and there's var
 
 ![](images/2_pyramid_multiple_python_smaller.gif)
 
-![](images/1_pyramid_python_code.png)
+Update: I don't feel I am going to be working on the physics of this. I am doing this in Python, so that goes against the physics I want. Also, other tools like Blender seem better for that task. I figured out how I can use multiple arrays into one Shader, and I prefer multiple arrays because I don't want to be repeating the same vertices thousands of times in the array for the same shape (like a bad database). A VBO/VAO could be useful for physics in the future, so that's why I spend time figuring that out (better & more scalable than an array of uniform variables from program to GPU shaders). It seems I already have to have the buffer defined before the rendering loop. There might be ways around that, but since I'm not a professional in OpenGL, I'm not going to look at it at this time. Other ways I could have implemented physics could be a uniform variable in the shaders that have an array of model vertices, but I found out that that wasn't scalable as it can't hold a massive amount of instances in that array in the shader. Also found out about Compute Shaders as a possibility. Those were my 3 physics options. If the latter is a great option and can implement pure physics, then let me know.
 
+While I don't have the physics as of now with limited time, I was successful in getting an open world with textures AND added in some complicated ambient & diffuse & specular lighting! I am pleased with the result. One of the favorite things I coded after [https://mmulcahy222.github.io/#treeview_search_gui_cpp](https://mmulcahy222.github.io/#treeview_search_gui_cpp)
+
+See the [FULL VIDEO OVER HERE](https://www.youtube.com/watch?v=Y1vCY-wgbR4)
+
+![](images/4_pyramid_gif_output_600w.gif)
+
+![](images/4_code.png)
